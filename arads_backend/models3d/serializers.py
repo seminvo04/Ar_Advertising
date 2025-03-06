@@ -5,3 +5,4 @@ class Model3DSerializer(serializers.ModelSerializer):
     class Meta:
         model = Model3D
         fields = ['id', 'name', 'qr_code', 'model_file', 'created_at']
+        read_only_fields = ('scan_count',)

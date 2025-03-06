@@ -76,5 +76,7 @@ final GoRouter _router = GoRouter(
       final code = state.uri.queryParameters['code'];
       return PreviewScreen(qrCode: code ?? "");
     }),
+
+
   ],
 );

@@ -10,6 +10,7 @@ class Model3D(models.Model):
     qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True)
     model_file = models.FileField(upload_to='models3d/')
     created_at = models.DateTimeField(auto_now_add=True)
+    scan_count = models.PositiveIntegerField(default=0, editable=False)
 
     def save(self, *args, **kwargs):
         if not self.qr_code:
@@ -23,7 +24,7 @@ class Model3D(models.Model):
             box_size=10,
             border=4,
         )
-        qr.add_data(f'http://192.168.0.107:8000/api/qr/{self.qr_code}')  # Vous changerez cette URL
+        qr.add_data(f'http://192.168.8.105:8000/api/qr/{self.qr_code}')  # Vous changerez cette URL
         qr.make(fit=True)
         qr_image = qr.make_image(fill_color="black", back_color="white")
 
@@ -36,4 +37,14 @@ class Model3D(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+            return self.name
+
+
+class Scan(models.Model):
+    model = models.ForeignKey(Model3D, on_delete=models.CASCADE)
+    scanned_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Scan for {self.model.name} at {self.scanned_at}'
+
+

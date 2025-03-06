@@ -38,9 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'models3d',
+    'corsheaders'
 ]
-INSTALLED_APPS += ['corsheaders']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -50,8 +52,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
-MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
 
 # En développement uniquement
 CORS_ALLOW_ALL_ORIGINS = True  # En production, vous spécifierez les domaines autorisés
@@ -138,10 +140,24 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 #FIREBASE_BUCKET = 'ar-advertising-cf562.appspot.com'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],  # Supprimer toute authentification
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Permettre l'accès à tout le monde
-    ],
+            'rest_framework.permissions.IsAuthenticated',
+        ]
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Autorise Next.js à faire des requêtes
+]
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    'BLACKLIST_AFTER_ROTATION': True,  # Met en liste noire un jeton après un rafraîchissement
+    'ROTATE_REFRESH_TOKENS': True,    # Permet de générer un nouveau refresh token à chaque rafraîchissement
 }
 
 
