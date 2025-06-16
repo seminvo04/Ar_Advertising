@@ -3,6 +3,7 @@ from io import BytesIO
 from django.core.files import File
 from django.db import models
 import uuid
+from django.contrib.auth.models import User
 
 class Model3D(models.Model):
     name = models.CharField(max_length=100)
@@ -37,7 +38,7 @@ class Model3D(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-            return self.name
+        return self.name
 
 
 class Scan(models.Model):
@@ -48,3 +49,19 @@ class Scan(models.Model):
         return f'Scan for {self.model.name} at {self.scanned_at}'
 
 
+# Nouveau modèle MediaModel pour vidéos et modèles 3D
+
+class MediaModel(models.Model):
+    TYPE_CHOICES = [
+        ('3D', 'Modèle 3D'),
+        ('Video', 'Vidéo'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Associe le modèle à un utilisateur
+    title = models.CharField(max_length=255)
+    media_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    file = models.FileField(upload_to='uploads/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
