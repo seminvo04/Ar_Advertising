@@ -11,7 +11,7 @@ router = DefaultRouter()
 router.register(r'models3d', Model3DViewSet)
 
 urlpatterns = [
-    path('', include('admin_material.urls')),
+    #path('', include('admin_material.urls')),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/qr/<str:qr_code>/', get_model_by_qr, name='get-model-by-qr'),
