@@ -6,10 +6,17 @@ import uuid
 from django.contrib.auth.models import User
 
 class Model3D(models.Model):
+    TYPE_CHOICES = [
+        ('static', 'Statique'),
+        ('animated', 'Animé'),
+        ('video', 'Vidéo')
+    ]
+
     name = models.CharField(max_length=100)
     qr_code = models.CharField(max_length=200, unique=True, blank=True)  # On le rend blank=True car on va le générer
     qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True)
     model_file = models.FileField(upload_to='models3d/')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='static')
     created_at = models.DateTimeField(auto_now_add=True)
     scan_count = models.PositiveIntegerField(default=0, editable=False)
 
@@ -25,7 +32,7 @@ class Model3D(models.Model):
             box_size=10,
             border=4,
         )
-        qr.add_data(f'http://192.168.8.105:8000/api/qr/{self.qr_code}')  # Vous changerez cette URL
+        qr.add_data(f'http://192.168.0.107:8000/api/qr/{self.qr_code}')  # Vous changerez cette URL
         qr.make(fit=True)
         qr_image = qr.make_image(fill_color="black", back_color="white")
 

@@ -65,18 +65,70 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Configuration des routes
 final GoRouter _router = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-    // GoRoute(path: '/', builder: (context, state) => const Fichier3D()),
-    GoRoute(path: '/explanation', builder: (context, state) => const ExplanationScreen()),
-    GoRoute(path: '/scan', builder: (context, state) => const ScanScreen()),
-    GoRoute(path: '/preview', builder: (context, state) {
-      final code = state.uri.queryParameters['code'];
-      return PreviewScreen(qrCode: code ?? "");
-    }),
-
-
+    GoRoute(
+      path: '/',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          child: const HomeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+                child: child,
+              ),
+            );
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: '/explanation',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          child: const ExplanationScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            );
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: '/scan',
+      pageBuilder: (context, state) {
+        return CustomTransitionPage(
+          child: const ScanScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+        );
+      },
+    ),
+    GoRoute(
+      path: '/preview',
+      pageBuilder: (context, state) {
+        final code = state.uri.queryParameters['code'];
+        return CustomTransitionPage(
+          child: PreviewScreen(qrCode: code ?? ""),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return ScaleTransition(
+              scale: Tween<double>(begin: 0.8, end: 1.0).animate(animation),
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+        );
+      },
+    ),
   ],
 );
