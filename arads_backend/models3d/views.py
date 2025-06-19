@@ -1,14 +1,9 @@
+# models3d/views.py
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import viewsets
 from .models import Model3D, Scan
-from .serializers import Model3DSerializer
 from django.shortcuts import get_object_or_404
-
-class Model3DViewSet(viewsets.ModelViewSet):
-    queryset = Model3D.objects.all()
-    serializer_class = Model3DSerializer
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -16,7 +11,7 @@ def get_model_by_qr(request, qr_code):
     model = get_object_or_404(Model3D, qr_code=qr_code)
     return Response({
         "model_file": model.model_file.url,
-        "type": model.type,
+        "type": model.type
     })
 
 @api_view(['POST'])
