@@ -16,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-
 type Model3D = {
   id: number;
   name: string;
@@ -24,7 +23,9 @@ type Model3D = {
   qr_code_image: string;
   scan_count: number;
   created_at: string;
+  type: "static" | "animated" | "video"; // <-- ajouté
 };
+
 
 const Model3DPage = () => {
 
@@ -63,6 +64,7 @@ const Model3DPage = () => {
       const token = localStorage.getItem("access");
       const data = new FormData();
       data.append("name", formData.name);
+      data.append("type", formData.type);
       if (formData.model_file instanceof File) {
         data.append("model_file", formData.model_file);
       }
@@ -143,7 +145,22 @@ const Model3DPage = () => {
           "-"
         ),
     },
+    {
+  header: "Type",
+  accessorKey: "type",
+  cell: ({ row }: any) => {
+    const type = row.original.type;
+    const typeLabels: Record<string, string> = {
+      static: "Statique",
+      animated: "Animé",
+      video: "Vidéo",
+    };
+    return typeLabels[type] || type;
+  },
+},
+
     { header: "Scans", accessorKey: "scan_count" },
+
     { header: "Créé le", accessorKey: "created_at" },
   ];
 
@@ -201,6 +218,21 @@ const Model3DPage = () => {
       required: !selectedModel, // obligatoire uniquement en création
       accept: ".glb,.gltf,.fbx,.obj", // à adapter à tes formats
     },
+    {
+  name: "type",
+  label: "Type de modèle",
+  type: "select" as const,
+  required: true,
+  options: [
+    { label: "Statique", value: "static" },
+    { label: "Animé", value: "animated" },
+    { label: "Vidéo", value: "video" },
+  ],
+  validation: z.enum(["static", "animated", "video"], {
+    required_error: "Le type est requis",
+  }),
+},
+
   ];
 
   return (
@@ -235,14 +267,15 @@ const Model3DPage = () => {
         fields={fields}
         onSubmit={handleSubmit}
         // ⛔️ Ne pas pré-remplir les fichiers
-        initialData={
-            selectedModel
-            ? {
-                name: selectedModel.name,
-                // Pas de model_file ici
-                }
-            : undefined
-        }
+       initialData={
+        selectedModel
+          ? {
+              name: selectedModel.name,
+              type: selectedModel.type,
+            }
+          : undefined
+      }
+
         submitText={selectedModel ? "Mettre à jour" : "Ajouter"}
         />
 
