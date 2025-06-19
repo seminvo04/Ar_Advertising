@@ -1,0 +1,219 @@
+// pages/verify-code.js
+"use client"
+
+import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Shield } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { signIn } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function VerifyCodePage() {
+  const { clientToken } = useParams();
+  const searchParams = useSearchParams();
+  const queryCode = searchParams.get("code") || '';
+  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', '']);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const inputRefs: React.RefObject<HTMLInputElement | null>[] = Array.from({ length: 6 }, () => useRef<HTMLInputElement | null>(null));
+  const router = useRouter();
+  const { resendCode } = useAuth();
+
+  useEffect(() => {
+    // Pré-remplir les champs si queryCode est présent
+    if (queryCode) {
+      const codeArray = queryCode.split('').slice(0, 6);
+      setVerificationCode((prev) => {
+        const newCode = [...prev];
+        codeArray.forEach((char, index) => {
+          if (index < 6) {
+            newCode[index] = char;
+          }
+        });
+        return newCode;
+      });
+
+      // Focus sur le premier champ vide
+      const firstEmptyIndex = codeArray.findIndex((char) => char === '');
+      if (firstEmptyIndex !== -1) {
+        inputRefs[firstEmptyIndex]?.current?.focus();
+      } else {
+        inputRefs[codeArray.length]?.current?.focus();
+      }
+    }
+  }, [queryCode, inputRefs]);
+
+  useEffect(() => {
+    // Si clientToken est absent, rediriger vers une page 404
+    if (!clientToken) {
+      router.replace("/404");
+    }
+  }, [clientToken, router]);
+
+  useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => setResendCountdown(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCountdown]);
+
+  const handleInputChange = (index: number, value: string | string[] | number[]) => {
+    if (value.length > 1) {
+      value = value.slice(0, 1);
+    }
+    
+    // Vérifier que c'est un chiffre
+    if (value !== '' && !/^\d+$/.test(String(value))) {
+      return;
+    }
+
+    const newCode = [...verificationCode];
+    newCode[index] = typeof value === 'string' ? value : '';
+    setVerificationCode(newCode);
+
+    // Passer au champ suivant si un chiffre est entré
+    if (value !== '' && index < 5) {
+      inputRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+    // Si l'utilisateur appuie sur Backspace dans un champ vide, focus sur le champ précédent
+    if (e.key === 'Backspace' && verificationCode[index] === '' && index > 0) {
+      inputRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError('');
+      try {
+      const res = await resendCode(clientToken as string);
+      console.log(res);
+      
+      if (res.isSuccess) {
+        setError('Un nouveau code a été envoyé à votre adresse email.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Impossible d\'envoyer un nouveau code. Veuillez réessayer.');
+    }    
+  };
+
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+    e.preventDefault();
+    const code = verificationCode.join('');
+    
+    if (code.length !== 6) {
+      setError('Veuillez entrer le code complet à 6 chiffres');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await signIn("credentials", {
+        clientToken,
+        code,
+        redirect: false,
+      });
+
+      console.log("resultat",response);
+
+      // on va confier cela a nextauth 
+      if (response?.ok) {
+        
+        // TODO AJOUTER UN TOAST ICI
+          router.push("/");
+      } else {
+        setError(response?.error || 'Échec de la vérification');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      // router.push('/onboarding');
+      setIsLoading(false);
+    }
+   
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-lg p-8">
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="space-y-2 text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+              <Shield className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Vérification</CardTitle>
+            <CardDescription>
+              Nous avons envoyé un code à 6 chiffres à votre adresse email.
+              Veuillez l&apos;entrer ci-dessous pour vérifier votre compte.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="flex justify-between gap-2">
+                {verificationCode.map((digit, index) => (
+                  <Input
+                    key={index}
+                    ref={inputRefs[index]}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    className="w-12 h-12 text-center text-lg font-semibold"
+                    value={digit}
+                    onChange={(e) => handleInputChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    autoFocus={index === 0}
+                  />
+                ))}
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full bg-primary hover:bg-primary/90"
+                disabled={isLoading || verificationCode.join('').length !== 6}
+              >
+                {isLoading ? "Vérification..." : "Vérifier"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center w-full">
+              <Button 
+                variant="link" 
+                onClick={handleResendCode} 
+                disabled={resendCountdown > 0}
+                className="text-primary hover:text-primary/90"
+              >
+                {resendCountdown > 0 
+                  ? `Renvoyer le code (${resendCountdown}s)` 
+                  : "Renvoyer le code"
+                }
+              </Button>
+            </div>
+            <p className="text-sm text-gray-500 text-center w-full">
+              Retourner à la {" "}
+              <Link href="/auth/login" className="font-medium text-primary hover:underline">
+                connexion
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
+}

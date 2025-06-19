@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../gestok"
+		},
+		{
+			"path": "../VIP_client_APP"
+		}
+	],
+	"settings": {}
+}
