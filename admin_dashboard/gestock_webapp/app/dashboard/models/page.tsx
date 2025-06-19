@@ -40,11 +40,15 @@ const Model3DPage = () => {
   const fetchModels = async () => {
     try {
       const token = localStorage.getItem("access");
+      console.log("le token",token);
       const res = await fetch("http://localhost:8000/api/models3d/", {
         headers: {
           Authorization: `Bearer ${token}`,
+          
         },
+        
       });
+      
       const data = await res.json();
       console.log("les mod",data);
       setModels(data);
@@ -187,7 +191,8 @@ const Model3DPage = () => {
     label: "Voir en 3D",
     icon: <Eye className="h-4 w-4" />,
     onClick: (row: Model3D) => {
-        setPreviewUrl(row.model_file);
+      console.log("Fichier 3D :", row.model_file); // vérifie bien l'URL
+      setPreviewUrl(row.model_file);
     },
      variant: "outline",
     }

@@ -8,6 +8,7 @@ export interface FormFieldT {
   type: FieldType;
   placeholder?: string;
   required?: boolean;
+  accept?: string;
   options?: { label: string; value: string | number }[];
   validation?: z.ZodType<string | number | boolean | null>;
 }

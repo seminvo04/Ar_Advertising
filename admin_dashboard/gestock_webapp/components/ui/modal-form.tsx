@@ -42,17 +42,33 @@ export function ModalForm<T>({
 
   // Création dynamique du schéma Zod
   const generateZodSchema = (fields: FormFieldT[]) => {
-    const schema: Record<string, z.ZodTypeAny> = {};
-    fields.forEach((field) => {
-      schema[field.name] = field.type === "multiselect"
-  ? (field.required ? z.array(z.string()).min(1, "Au moins un choix requis") : z.array(z.string()).optional()):
-      schema[field.name] = field.validation || 
-        (field.type === 'email' ? z.string().email("Email invalide") :
-         field.required ? z.string().min(1, "Ce champ est requis") : 
-         z.string().optional());
-    });
-    return z.object(schema);
-  };
+  const schema: Record<string, z.ZodTypeAny> = {};
+  fields.forEach((field) => {
+    if (field.type === "multiselect") {
+      schema[field.name] = field.required
+        ? z.array(z.string()).min(1, "Au moins un choix requis")
+        : z.array(z.string()).optional();
+    } else if (field.type === "file") {
+      schema[field.name] = field.required
+        ? z
+            .any()
+            .refine((val) => val instanceof File, {
+              message: "Un fichier est requis",
+            })
+        : z.any().optional();
+    } else {
+      schema[field.name] =
+        field.validation ||
+        (field.type === "email"
+          ? z.string().email("Email invalide")
+          : field.required
+          ? z.string().min(1, "Ce champ est requis")
+          : z.string().optional());
+    }
+  });
+  return z.object(schema);
+};
+
 
   const form = useForm({
     resolver: zodResolver(generateZodSchema(fields)),
@@ -131,23 +147,32 @@ export function ModalForm<T>({
                           {...formField}
                           placeholder={field.placeholder}
                         />
-                      )  : (
-                        <Input
-                        {...formField}
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        onChange={(e) => {
-                          if (field.type === 'number') {
-                            const value = e.target.value === '' ? '' : Number(e.target.value);
-                            formField.onChange(value);
-                          } else {
-                            formField.onChange(e.target.value);
-                          }
-                        }}
-                        value={formField.value ?? ""}
-                      />
-                      
-                      )}
+                      ) : field.type === "file" ? (
+  <Input
+    type="file"
+    accept={field.accept}
+    onChange={(e) => {
+      const file = e.target.files?.[0];
+      form.setValue(field.name, file, { shouldValidate: true });
+    }}
+  />
+) : (
+  <Input
+    {...formField}
+    type={field.type}
+    placeholder={field.placeholder}
+    onChange={(e) => {
+      if (field.type === 'number') {
+        const value = e.target.value === '' ? '' : Number(e.target.value);
+        formField.onChange(value);
+      } else {
+        formField.onChange(e.target.value);
+      }
+    }}
+    value={formField.value ?? ""}
+  />
+)
+}
                     </FormControl>
                     <FormMessage />
                   </FormItem>

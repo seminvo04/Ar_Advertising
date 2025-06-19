@@ -34,7 +34,7 @@ const navItems = [
                 description: "Vue d'ensemble"
             },
             {
-                title: "Mes modèeles",
+                title: "Mes modèles",
                 url: "/dashboard/models",
                 icon: Users,
                 description: "Liste des serveurs"
