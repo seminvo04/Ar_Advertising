@@ -1,3 +1,4 @@
+# urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -6,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 from models3d.views import Model3DViewSet, get_model_by_qr, log_scan
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.response import Response
+from models3d import views
 
 # Router pour les ViewSets
 router = DefaultRouter()
@@ -27,5 +29,4 @@ urlpatterns = [
     path('api/auth/logout/', lambda request: Response({"message": "Logged out"}), name='logout'),
 ]
 
-# Pour les fichiers médias (ex: modèles 3D, vidéos)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
