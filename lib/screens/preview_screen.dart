@@ -49,7 +49,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
         }
 
         setState(() {
-          modelUrl = "http://192.168.0.107:8000$file";
+          modelUrl = "http://192.168.100.29:8000$file";
           type = contentType;
           isLoading = false;
         });
@@ -120,11 +120,13 @@ class _PreviewScreenState extends State<PreviewScreen> {
         src: modelUrl!,
         alt: "Modèle 3D",
         ar: true,
-        autoRotate: true,
+        arPlacement: ArPlacement.floor,
+        autoRotate: false,
         cameraControls: true,
         autoPlay: type == 'animated',
         backgroundColor: Colors.transparent,
       ),
+
     );
   }
 }
